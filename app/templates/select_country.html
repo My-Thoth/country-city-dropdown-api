@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Country</title>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script> <!-- Link to your JS file -->
+</head>
+<body>
+    <h1>Select Country and City</h1>
+    <form method="POST">
+        <label for="country">Country:</label>
+        <select id="country" name="country">
+            <option value="">Select a Country</option>
+            {% for country in countries %}
+                <option value="{{ country.code }}">{{ country.name }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="city">City:</label>
+        <select id="city" name="city">
+            <option value="">Select a City</option>
+        </select>
+
+        <button type="submit">Submit</button>
+    </form>
+
+    <script>
+        // JavaScript to dynamically load cities based on country selection
+        document.getElementById('country').addEventListener('change', function() {
+            var countryCode = this.value;
+            var citySelect = document.getElementById('city');
+            
+            // Clear current cities
+            citySelect.innerHTML = '<option value="">Select a City</option>';
+
+            if (countryCode) {
+                // Fetch cities from Flask route
+                fetch('/update-cities/' + countryCode)
+                    .then(response => {
+                        // Check if the response is okay (status 200)
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch cities: ' + response.statusText);
+                        }
+                        return response.json(); // Parse JSON if the response is okay
+                    })
+                    .then(data => {
+                        // Loop through the cities and populate the city select dropdown
+                        data.cities.forEach(function(city) {
+                            var option = document.createElement('option');
+                            option.value = city;
+                            option.textContent = city;
+                            citySelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => {
+                        // Handle errors that occur during fetch or data processing
+                        console.error('Error:', error);
+                        var option = document.createElement('option');
+                        option.value = '';
+                        option.textContent = 'Error loading cities';
+                        citySelect.appendChild(option);
+                    });
+            }
+        });
+    </script>
+</body>
+</html>
